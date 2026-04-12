@@ -5,6 +5,9 @@ from ml_comp import *
 
 if 'env' in st.session_state:
     env:Env = st.session_state['env']
+else:
+    st.write('Please go back to home page to set up a model to load.')
+    st.stop()
 
 if 'app_vars' in st.session_state:
     app_vars:AppVars = st.session_state['app_vars']

@@ -4,3 +4,4 @@ plotly==6.5.1
 icecream==2.1.10
 boto3==1.42.83 
 rdkit==2025.9.6
+scikit-learn==1.8.0 

@@ -12,6 +12,10 @@ start = timer()
 
 if 'new_model' in st.session_state:
     new_model = st.session_state['new_model']
+else:
+    st.write('Please go back to home page to set up a model to create.')
+    st.stop()
+
 
 if not new_model:
     st.write(f"An existing model will be used.")
