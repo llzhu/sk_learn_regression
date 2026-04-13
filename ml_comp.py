@@ -5,7 +5,7 @@ import plotly.express as px
 
     
 def app_header():
-    st.subheader(f'This app uses Scikit_Learn for propertyies/activities training and prediction.')
+    st.subheader(f'This app uses Scikit-Learn for propertyies/activities training and prediction.')
     read_me_exp = st.expander(f'About Scikit Learn and Datasets.', expanded=False)
     with read_me_exp:
         st.subheader('Scikit Learn:')
