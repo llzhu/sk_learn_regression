@@ -13,4 +13,4 @@ activities = activity.filter(target_chembl_id="CHEMBL204").filter(standard_type=
 
 ### Deployment
 It is deployed on Streamlit community cloud:
-https://sk-learn-regression-llzhu.streamlit.app/
+https://pytorch-sk-learn-regression-llzhu.streamlit.app/
