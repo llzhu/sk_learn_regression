@@ -5,9 +5,12 @@ import plotly.express as px
 
     
 def app_header():
-    st.subheader(f'This app uses Scikit-Learn for propertyies/activities training and prediction.')
-    read_me_exp = st.expander(f'About Scikit Learn and Datasets.', expanded=False)
+    st.subheader(f'PyTorch/Scikit-Learn for propertyies/activities training and prediction.')
+    read_me_exp = st.expander(f'About PyTorch, Scikit Learn and Datasets.', expanded=False)
     with read_me_exp:
+        st.subheader('PyTorch:')
+        st.markdown('PyTorch is a popular open-source machine learning framework used for building and training deep neural networks.')
+        st.markdown('https://pytorch.org/')
         st.subheader('Scikit Learn:')
         st.markdown("Scikit-learn is a ML lib for Python. It features various classification, regression and clustering algorithms.")
         st.markdown("It is designed to interoperate with the Python numerical and scientific libraries NumPy and SciPy.")
@@ -23,12 +26,12 @@ def app_header():
 def app_setup():
     sel1, sel2, sel3, sel4 = st. columns(4)
     with sel1:  # Studies/Datasets
-        study = st.selectbox('Pick a dataset/study', ['--', DELANEY, THROBIN_IC50])
+        study = st.selectbox('Pick a dataset/study', STUDY_OPTIONS)
         apply_log: bool = st.checkbox("Apply log scale?")
     with sel2:  # Discriptoes/FP
-        X_desc = st.radio('Features used in ML', [FP_ONLY, ADD_RDKIT_DESCRIPTORS, RDKIT_DESCRIPTORS_ONLY])
+        X_desc = st.radio('Features used in ML', FEATURE_OPTIONS)
     with sel3:   # pick a algorithm
-        algorithm = st.radio(f'Select a Regression Algorithm:', options=[MODEL_HGB, MODEL_LBR, MODEL_NN, MODEL_RF], horizontal=True)
+        algorithm = st.radio(f'Select a Regression Algorithm:', options=MODEL_OPTIONS, horizontal=True)
     with sel4:   # exclusions
         list_to_exclude = st.text_area('Exclude the following in the model training:')
         excluded_list = get_list(list_to_exclude) if list_to_exclude else []

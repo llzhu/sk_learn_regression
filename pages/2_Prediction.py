@@ -75,8 +75,15 @@ with col1:
         X = X[model_desc.X_cols]
         X = model_desc.X_scaler.transform(X)
 
-        y_pred = model_desc.model.predict(X)
-        y_pred = y_pred.reshape(-1,1)
+        if model_desc.class_name == MODEL_TORCH:
+            model = model_desc.model
+            model.eval()
+            with torch.no_grad():
+                y_pred = model(torch.tensor(X, dtype=torch.float32)).numpy()
+        else:
+            y_pred = model_desc.model.predict(X)
+            y_pred = y_pred.reshape(-1,1)
+
         y_pred = model_desc.y_scaler.inverse_transform(y_pred)
         preds = y_pred.reshape(-1)
     else:

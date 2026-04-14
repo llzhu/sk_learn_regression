@@ -39,7 +39,9 @@ elif algorithm == MODEL_RF:
     from sklearn.ensemble import RandomForestRegressor
     model = RandomForestRegressor()
     class_name = 'RandomForestRegressor'
-
+elif algorithm == MODEL_TORCH:
+    # it is a special case
+    class_name = MODEL_TORCH
 
 st.session_state['new_model'] = new_model
 st.session_state['env'] = env
@@ -103,6 +105,12 @@ if df_g is not None:
 chem_list = [Chem.MolFromSmiles(smiles) for smiles in df_g.SMILES]
 X = get_all_descriptors(chem_list, radius=RADIUS, fp_size=FP_SIZE, descriptor_sel=X_desc, reduced=True)
 X_cols = X.columns
+
+
+
+
+if algorithm == MODEL_TORCH:
+    model = L3Model(len(X_cols), 256, 128)
 
 y = df_g[expt_col_name].values.reshape(-1, 1)
 y_scaler = preprocessing.StandardScaler().fit(y)

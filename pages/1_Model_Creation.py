@@ -63,12 +63,19 @@ for train_index, test_index in kf.split(X):
     X_train, X_test = X.iloc[train_index, :], X.iloc[test_index, :]
     y_train, y_test = y[train_index], y[test_index]
 
-    model.fit(X_train, y_train)
+    if class_name == MODEL_TORCH:
+        torch_train(model, 100, torch.tensor(X_train.to_numpy(), dtype=torch.float32), torch.tensor(y_train, dtype=torch.float32))
+        model.eval()
+        with torch.no_grad():
+            y_train_pred = model(torch.tensor(X_train.to_numpy(), dtype=torch.float32)).numpy()
+            y_test_pred = model(torch.tensor(X_test.to_numpy(), dtype=torch.float32)).numpy()
+    else:
+        model.fit(X_train, y_train)
 
-    y_train_pred = model.predict(X_train)
-    y_train_pred = y_train_pred.reshape(-1,1)
-    y_test_pred = model.predict(X_test)
-    y_test_pred = y_test_pred.reshape(-1,1)
+        y_train_pred = model.predict(X_train)
+        y_train_pred = y_train_pred.reshape(-1,1)
+        y_test_pred = model.predict(X_test)
+        y_test_pred = y_test_pred.reshape(-1,1)
 
     y_train = y_scaler.inverse_transform(y_train)
     y_train_pred = y_scaler.inverse_transform(y_train_pred)
@@ -130,7 +137,11 @@ for train_index, test_index in kf.split(X):
 end = timer()
 
 # Train with the whole data set
-model.fit(X, y)
+if class_name == MODEL_TORCH:
+    torch_train(model, 100, torch.tensor(X.to_numpy(), dtype=torch.float32), torch.tensor(y, dtype=torch.float32))
+    ic(model)
+else:
+    model.fit(X, y)
 
 model_desc.model = model   # populate model_desc with trained model
 key_prefix = f'{env.app_data}/{app_vars.study}/{class_name}/{model_desc.X_desc}'

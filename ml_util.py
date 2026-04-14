@@ -15,6 +15,8 @@ import re
 from dataclasses import dataclass, field
 from typing import List
 import math
+import torch
+import torch.nn as nn
 from icecream import ic
 import base64
 from itertools import chain
@@ -85,16 +87,23 @@ MODEL_NN = 'Neural_Network'
 MODEL_LBR = 'Linear_Bayesian_Ridge'
 MODEL_RF = 'Random_Forest'
 MODEL_HGB = 'Hist_Gradient_Boost'
+MODEL_TORCH = 'PyTorch'
+
+MODEL_OPTIONS = [MODEL_HGB, MODEL_LBR, MODEL_NN, MODEL_RF, MODEL_TORCH]
 
 # discriptors
 FP_ONLY = 'Morgan_FP'
 ADD_RDKIT_DESCRIPTORS = 'Morgan_FP_2D_Descriptors'
 RDKIT_DESCRIPTORS_ONLY = '2D_Descriptors'
 
+FEATURE_OPTIONS = [FP_ONLY, ADD_RDKIT_DESCRIPTORS, RDKIT_DESCRIPTORS_ONLY]
+
 # Studies/dataset
 DELANEY = 'Solubility_Delaney'
 THROBIN_IC50 = 'Thrombin_IC50'
 AD_HOC = 'ad_hoc'
+
+STUDY_OPTIONS = ['--', DELANEY, THROBIN_IC50, AD_HOC]
 
 RADIUS = 3 
 FP_SIZE = 4096
@@ -111,10 +120,6 @@ STRUCTURE = 'Compound'
 CHEMBL_UNIT = 'standard_units'
 CHEMBL_SMILES = 'canonical_smiles'
 CHEMBL_CMPD_ID = 'molecule_chembl_id'
-
-MY_MODEL = 'My model'
-MASTER_MODEL = 'Master Model'
-MODEL_OPTIONS = [MY_MODEL, MASTER_MODEL]
 
 
 
@@ -174,17 +179,58 @@ def get_df_csv(df):
     df.to_csv(f, index=False)
     return f
 
-def convert_ugperml_to_um(row):
-    if row['unit'] == 'ug/mL':
-        return (row['value']/row['mw'])*1000.0
-    else:
-        return row['value']
 
 def convert_df_csv(df, index=False):
     return df.to_csv(index=index).encode('utf-8')
 
 
 
+class L3Model(nn.Module):
+    def __init__(self, input_dim, dim1=256, dim2=128):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Linear(input_dim, dim1),
+            nn.ReLU(),
+            nn.Linear(dim1, dim2),
+            nn.ReLU(),
+            nn.Linear(dim2, 1)
+        )
+
+    def forward(self, x):
+        return self.net(x)
+    
+class L4Model(nn.Module):
+    def __init__(self, input_dim, dim1=256, dim2=128, dim3=64):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Linear(input_dim, dim1),
+            nn.ReLU(),
+            nn.Linear(dim1, dim2),
+            nn.ReLU(),
+            nn.Linear(dim2, dim3),
+            nn.ReLU(),
+            nn.Linear(dim3, 1)
+        )
+
+    def forward(self, x):
+        return self.net(x)
+
+def torch_train(model, epochs, X, y):
+    criterion = nn.MSELoss()
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+
+    # Training loop
+    for epoch in range(epochs):
+        model.train()
+    
+        preds = model(X)
+        loss = criterion(preds, y)
+    
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+    
+    
 
 # def get_chemdl_activity_df(standard_type, target_organism):
 #
@@ -296,6 +342,7 @@ def get_rdkit_descriptors(mol_list):
     return df
     
 
+@st.cache_data
 def get_all_descriptors(mol_list, radius, fp_size, descriptor_sel, reduced=True):
 
     morgan_gen = rdFingerprintGenerator.GetMorganGenerator(radius=radius, fpSize=fp_size)
