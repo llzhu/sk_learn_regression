@@ -67,6 +67,9 @@ bin_0 = [0.1]
 if study == DELANEY:
     # df_g = os.path.join(env.src_data, 'delaney.csv')
     df_g =  get_df_from_s3csv(env.s3_bucket, f'{env.src_data}/delaney.csv')
+
+    if excluded_list:
+        df_g = df_g[~df_g['Compound ID'].isin(excluded_list)]
     df_g = df_g[['Compound ID', 'log_M', 'SMILES']]
     expt_col_name = 'log_Solubility_M'
     orig_col_name = 'Solubility_M'
@@ -84,7 +87,11 @@ elif study == THROBIN_IC50:
 
     # df_g = pd.DataFrame(data_ic50)
 
-    df_g = df_g =  get_df_from_s3csv(env.s3_bucket, f'{env.src_data}/thrombin_ic50.csv')
+    df_g =  get_df_from_s3csv(env.s3_bucket, f'{env.src_data}/thrombin_ic50.csv')
+
+    if excluded_list:
+        df_g = df_g[~df_g['molecule_chembl_id'].isin(excluded_list)]
+
     orig_col_name = 'IC50'
     df_g = df_g.rename(columns={'standard_value': orig_col_name})
 
