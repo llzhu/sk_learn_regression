@@ -1,4 +1,4 @@
-### TyTorch and SciKet-Learn implementation with Streamlit 
+### PyTorch and SciKet-Learn implementation with Streamlit 
 PyTorch is a popular open-source machine learning framework used for building and training deep neural networks. (https://pytorch.org)
 
 Scikit-learn is a ML lib for Python. It features various classification, regression and clustering algorithms.
