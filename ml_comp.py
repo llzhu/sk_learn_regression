@@ -35,7 +35,7 @@ def app_setup():
     with sel4:   # exclusions
         list_to_exclude = st.text_area('Exclude the following in the model training:')
         excluded_list = get_list(list_to_exclude) if list_to_exclude else []
-    
+        excluded_pct = st.text_input("Percentage for randomly excluded list (int):")
     st.write('***')
 
     new_or_existing = st.radio('New model or using existing model?', ['Work with an Existing Model', 'Create New Model'], 
@@ -44,7 +44,7 @@ def app_setup():
   
     st.write('***')
 
-    return study, apply_log, X_desc, algorithm, excluded_list, new_model
+    return study, apply_log, X_desc, algorithm, excluded_list, excluded_pct, new_model
 
 def side_data_file_upload(warning_container=None):
     uploaded_data_file = None
@@ -79,8 +79,6 @@ def side_data_file_upload(warning_container=None):
                
               
         id_col = st.sidebar.selectbox('Select Compund ID Column if available:', options=col_all)  
-        if  id_col != '--':
-            cmpd_list = df_upload[id_col].tolist()
 
         out_columns = []
 
@@ -96,6 +94,9 @@ def side_data_file_upload(warning_container=None):
             out_columns.append(expt_col_name)
         
         df_g = df_upload[out_columns]
+
+        if id_col and id_col != '--':
+            df_g = df_g.rename(columns={id_col:COMPOUND_ID}) 
 
         return df_g, expt_col_name
 

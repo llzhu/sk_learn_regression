@@ -3,6 +3,7 @@ import streamlit as st
 import plotly.figure_factory as ff
 from rdkit import Chem
 from sklearn import preprocessing
+from sklearn.model_selection import ShuffleSplit
 from ml_util import *
 from ml_comp import *
 
@@ -19,7 +20,7 @@ env = Env(  st.secrets['src_data'],
 
 app_header()
 
-study, apply_log, X_desc, algorithm, excluded_list, new_model = app_setup() 
+study, apply_log, X_desc, algorithm, excluded_list, excluded_pct, new_model = app_setup() 
 
 model = None
 class_name = ''
@@ -68,12 +69,11 @@ if study == DELANEY:
     # df_g = os.path.join(env.src_data, 'delaney.csv')
     df_g =  get_df_from_s3csv(env.s3_bucket, f'{env.src_data}/delaney.csv')
 
-    if excluded_list:
-        df_g = df_g[~df_g['Compound ID'].isin(excluded_list)]
     df_g = df_g[['Compound ID', 'log_M', 'SMILES']]
     expt_col_name = 'log_Solubility_M'
     orig_col_name = 'Solubility_M'
-    df_g = df_g.rename(columns={'log_M':expt_col_name})
+    df_g = df_g.rename(columns={'log_M':expt_col_name,
+                                'Compound ID': COMPOUND_ID})
 
     apply_log = True   # Special logic - we still want to see the non-log data
     
@@ -87,10 +87,8 @@ elif study == THROBIN_IC50:
 
     # df_g = pd.DataFrame(data_ic50)
 
+    # it occasionally fails getting data directly from ChEMBL. We therefore get the data saved to s3
     df_g =  get_df_from_s3csv(env.s3_bucket, f'{env.src_data}/thrombin_ic50.csv')
-
-    if excluded_list:
-        df_g = df_g[~df_g['molecule_chembl_id'].isin(excluded_list)]
 
     orig_col_name = 'IC50'
     df_g = df_g.rename(columns={'standard_value': orig_col_name})
@@ -103,11 +101,23 @@ elif study == THROBIN_IC50:
 elif study == AD_HOC:
     df_g, expt_col_name = side_data_file_upload(warning_container=warning_container)
     
-
+###
+if excluded_pct and int(excluded_pct) > 0:
+    ss = ShuffleSplit(n_splits=1, test_size=int(excluded_pct)/100.0, random_state=42)
+    for train_index, test_index in ss.split(df_g):
+        df_ex = df_g.iloc[test_index]
+        df_g = df_g.iloc[train_index]
+        
+elif excluded_list:
+    df_ex = df_g[df_g[COMPOUND_ID].isin(excluded_list)]
+    df_g = df_g[~df_g[COMPOUND_ID].isin(excluded_list)]
+    
 if df_g is not None:
     csv = convert_df_csv(df_g)
-    st.sidebar.download_button("Download Smiles file", data=csv, file_name=f'smiles_{expt_col_name}.csv', mime='text/csv')
-
+    st.sidebar.download_button("Download Smiles file", data=csv, file_name=f'data_{expt_col_name}.csv', mime='text/csv')
+if df_ex is not None:
+    csv_ex = convert_df_csv(df_ex)
+    st.sidebar.download_button("Download excluded data file", data=csv_ex, file_name=f'excluded_{expt_col_name}.csv', mime='text/csv')
 
 chem_list = [Chem.MolFromSmiles(smiles) for smiles in df_g.SMILES]
 X = get_all_descriptors(chem_list, radius=RADIUS, fp_size=FP_SIZE, descriptor_sel=X_desc, reduced=True)
