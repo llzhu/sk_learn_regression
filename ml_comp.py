@@ -112,20 +112,33 @@ def fig_df_structure(df, expt_label, pred_label, df_container, mol_container, hi
         custom_data=["row_id"] 
     )
 
+    min_val = min(df[expt_label].min(), df[pred_label].min())
+    max_val = max(df[expt_label].max(), df[pred_label].max())
+
     fig.update_layout(
-    shapes=[
-        dict(
-            type="rect",
-            xref="paper",
-            yref="paper",
-            x0=0,
-            y0=0,
-            x1=1,
-            y1=1,
-            line=dict(color="black", width=2),
-            fillcolor="rgba(0,0,0,0)"
-            )
-        ]
+        shapes=[
+                dict(type="rect",
+                    xref="paper",
+                    yref="paper",
+                    x0=0,
+                    y0=0,
+                    x1=1,
+                    y1=1,
+                    line=dict(color="black", width=2),
+                    fillcolor="rgba(0,0,0,0)"
+                )
+            ],
+        xaxis=dict(range=[min_val, max_val]),
+        yaxis=dict(range=[min_val, max_val])
+    )
+
+    # Add diagonal x=y line
+    fig.add_shape(
+        type='line',
+        x0=min_val, y0=min_val,
+        x1=max_val, y1=max_val,
+        line=dict(color='Red', dash='dash'),
+        layer='below' # Keeps the line behind the data points
     )
 
     event = st.plotly_chart(
