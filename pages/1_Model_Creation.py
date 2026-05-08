@@ -139,11 +139,19 @@ end = timer()
 # Train with the whole data set
 if class_name == MODEL_TORCH:
     torch_train(model, 100, torch.tensor(X.to_numpy(), dtype=torch.float32), torch.tensor(y, dtype=torch.float32))
-    ic(model)
+    # ic(model)
 else:
     model.fit(X, y)
 
+k_fold_rmse = round(np.mean(rmse_test_list),2)
+k_fold_rmse_train = round(np.mean(rmse_test_list),2)
+k_fold_r2 = round(np.mean(r2_test_list),2)
+k_fold_r2_train = round(np.mean(r2_train_list),2)
+
 model_desc.model = model   # populate model_desc with trained model
+model_desc.k_fold_rmse = k_fold_rmse
+model_desc.k_fold_r2 = k_fold_r2
+
 key_prefix = f'{env.app_data}/{app_vars.study}/{class_name}/{model_desc.X_desc}'
 key_model_desc = f'{key_prefix}/model_desc.pkl'
 key_model_data = f'{key_prefix}/model_data.pkl'
@@ -153,11 +161,11 @@ pickle_to_s3(model_data, env.s3_bucket, key_model_data)
 with summary_container:
     st.write(f'Elapsed time for the {k} trainings: {timedelta(seconds=end - start)}')
     col1, col2 = st.columns(2)
-    col1.write(f"Overall R2 value for train set: {round(np.mean(r2_train_list), 2)}")
-    col1.write(f"Average RMSE for train set: {round(np.mean(rmse_train_list), 2)}")
+    col1.write(f"Overall R2 value for train set: {k_fold_r2_train}")
+    col1.write(f"Average RMSE for train set: {k_fold_rmse_train}")
 
-    col2.write(f"Overall R2 value for test set: {round(np.mean(r2_test_list),2)}")
-    col2.write(f"Average RMSE for test set: {round(np.mean(rmse_test_list),2)}")
+    col2.write(f"Overall R2 value for test set: {k_fold_r2}")
+    col2.write(f"Average RMSE for test set: {k_fold_rmse}")
 
     st.write(f'''A {class_name} model on {app_vars.study} has been also trained with all dataset.\n
          The trained model with meta data have been writen to {env.s3_bucket} s3 bucket:\n

@@ -1,4 +1,5 @@
 import streamlit as st
+from sklearn.metrics import r2_score
 from ml_util import *
 from ml_comp import *
 
@@ -125,8 +126,12 @@ with col2:
     if expt_label:
         highlight_only = st.checkbox('Only display selected mol in the correlation fig')    
     df_container = st.container()
+
+   
     
     if expt_label and expt_label in df_pred.columns:
+        st.write(f"The average K-fold (20/80) R2 of the model = {model_desc.k_fold_r2}")
+        st.write(f'The R2 for this data file is {round(r2_score(df_pred[expt_label], df_pred[pred_label]),2)}')
         fig_df_structure(df_pred, expt_label, pred_label, df_container, mol_container, highlight_only=highlight_only)
     else:
         st.dataframe(df_pred, hide_index=True)

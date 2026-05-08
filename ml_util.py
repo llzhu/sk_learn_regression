@@ -69,7 +69,7 @@ def any_contents(bucket, prefix):
         Delimiter="/"
     )
 
-    ic(response.get("Contents", []))
+    # ic(response.get("Contents", []))
     return len(response.get("Contents", []))>0
     
     
@@ -141,7 +141,8 @@ class ModelDesc:
     y_scaler: StandardScaler = None
     class_name: str = ''
     model: object = None
-    
+    k_fold_r2: float = 0.0
+    k_fold_rmse: float = 0.0
 
 @dataclass
 class ModelData:

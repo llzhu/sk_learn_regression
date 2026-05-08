@@ -24,7 +24,7 @@ def app_header():
         st.write('***')
     
 def app_setup():
-    sel1, sel2, sel3, sel4 = st. columns(4)
+    sel1, sel2, sel3, sel4 = st. columns([2,2,2,3])
     with sel1:  # Studies/Datasets
         study = st.selectbox('Pick a dataset/study', STUDY_OPTIONS)
         apply_log: bool = st.checkbox("Apply log scale?")
@@ -35,6 +35,7 @@ def app_setup():
     with sel4:   # exclusions
         list_to_exclude = st.text_area('Exclude the following in the model training:')
         excluded_list = get_list(list_to_exclude) if list_to_exclude else []
+        exclusion_seed = st.text_input("Seed for randomly excluded list (int):", value='42')
         excluded_pct = st.text_input("Percentage for randomly excluded list (int):")
     st.write('***')
 
@@ -44,7 +45,7 @@ def app_setup():
   
     st.write('***')
 
-    return study, apply_log, X_desc, algorithm, excluded_list, excluded_pct, new_model
+    return study, apply_log, X_desc, algorithm, excluded_list, exclusion_seed, excluded_pct, new_model
 
 def side_data_file_upload(warning_container=None):
     uploaded_data_file = None

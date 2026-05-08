@@ -20,7 +20,7 @@ env = Env(  st.secrets['src_data'],
 
 app_header()
 
-study, apply_log, X_desc, algorithm, excluded_list, excluded_pct, new_model = app_setup() 
+study, apply_log, X_desc, algorithm, excluded_list, exclusion_seed, excluded_pct, new_model = app_setup() 
 
 model = None
 class_name = ''
@@ -103,7 +103,7 @@ elif study == AD_HOC:
     
 ###
 if excluded_pct and int(excluded_pct) > 0:
-    ss = ShuffleSplit(n_splits=1, test_size=int(excluded_pct)/100.0, random_state=42)
+    ss = ShuffleSplit(n_splits=1, test_size=int(excluded_pct)/100.0, random_state=int(exclusion_seed))
     for train_index, test_index in ss.split(df_g):
         df_ex = df_g.iloc[test_index]
         df_g = df_g.iloc[train_index]
