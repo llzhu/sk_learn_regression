@@ -101,7 +101,7 @@ elif study == THROBIN_IC50:
 elif study == AD_HOC:
     df_g, expt_col_name = side_data_file_upload(warning_container=warning_container)
     
-###
+df_ex = None
 if excluded_pct and int(excluded_pct) > 0:
     ss = ShuffleSplit(n_splits=1, test_size=int(excluded_pct)/100.0, random_state=int(exclusion_seed))
     for train_index, test_index in ss.split(df_g):
@@ -114,7 +114,7 @@ elif excluded_list:
     
 if df_g is not None:
     csv = convert_df_csv(df_g)
-    st.sidebar.download_button("Download Smiles file", data=csv, file_name=f'data_{expt_col_name}.csv', mime='text/csv')
+    st.sidebar.download_button("Download data file", data=csv, file_name=f'data_{expt_col_name}.csv', mime='text/csv')
 if df_ex is not None:
     csv_ex = convert_df_csv(df_ex)
     st.sidebar.download_button("Download excluded data file", data=csv_ex, file_name=f'excluded_{expt_col_name}.csv', mime='text/csv')
