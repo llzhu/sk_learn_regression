@@ -24,6 +24,7 @@ import boto3
 import pickle
 from typing import Tuple
 
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 s3client = boto3.client(
     "s3",
@@ -192,6 +193,7 @@ class L3Model(nn.Module):
         self.net = nn.Sequential(
             nn.Linear(input_dim, dim1),
             nn.ReLU(),
+            nn.Dropout(0.2),
             nn.Linear(dim1, dim2),
             nn.ReLU(),
             nn.Linear(dim2, 1)
@@ -206,6 +208,7 @@ class L4Model(nn.Module):
         self.net = nn.Sequential(
             nn.Linear(input_dim, dim1),
             nn.ReLU(),
+            nn.Dropout(0.2),
             nn.Linear(dim1, dim2),
             nn.ReLU(),
             nn.Linear(dim2, dim3),
@@ -217,6 +220,8 @@ class L4Model(nn.Module):
         return self.net(x)
 
 def torch_train(model, epochs, X, y):
+    X = X.to(DEVICE)
+    y = y.to(DEVICE)
     criterion = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
 
@@ -318,7 +323,7 @@ def get_floor(in_num: float, floor: float)-> float:
 #     X = pd.DataFrame(data=X)  # Make it a dataframe
 #     return X
 
-def remove_low_variance(input_data, threshold=0.1) -> pd.DataFrame:
+def remove_low_variance(input_data, threshold=0) -> pd.DataFrame:
     # input_data expacted to be np.ndarray or pd.Dataframe
     if isinstance(input_data, np.ndarray):
         input_data = pd.DataFrame(data=input_data)  
@@ -333,6 +338,10 @@ def get_rdkit_fp(morgan_gen, mol_list):
 
 def get_rdkit_descriptors(mol_list):
     descriptor_names = [x[0] for x in Descriptors._descList]
+
+    excluded_descriptors = ['Ipc']  # remove it
+    descriptor_names = [d for d in descriptor_names if d not in excluded_descriptors]
+
     calc = MoleculeDescriptors.MolecularDescriptorCalculator(descriptor_names)
     mol_descriptors = []
     for mol in mol_list:

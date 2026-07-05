@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from ml_util import *
 from timeit import default_timer as timer
 from datetime import timedelta
-
+from sklearn import preprocessing
 
 start = timer()
 
@@ -44,7 +44,7 @@ summary_container = st.container()
 
 
 k = 5
-kf = KFold(n_splits=k, shuffle=True, random_state=5)
+kf = KFold(n_splits=k, shuffle=True, random_state=42)
 
 n_test = int(100/k)
 n_train = 100 - n_test
@@ -63,12 +63,22 @@ for train_index, test_index in kf.split(X):
     X_train, X_test = X.iloc[train_index, :], X.iloc[test_index, :]
     y_train, y_test = y[train_index], y[test_index]
 
+    y_scaler = preprocessing.StandardScaler().fit(y_train)
+    y_train = y_scaler.transform(y_train)
+    y_test = y_scaler.transform(y_test)
+
+    X_scaler = preprocessing.StandardScaler().fit(X_train)
+    X_train = X_scaler.transform(X_train)
+    X_test = X_scaler.transform(X_test)
+    
+
     if class_name == MODEL_TORCH:
-        torch_train(model, 100, torch.tensor(X_train.to_numpy(), dtype=torch.float32), torch.tensor(y_train, dtype=torch.float32))
+        model.to(DEVICE)
+        torch_train(model, 100, torch.tensor(X_train, dtype=torch.float32), torch.tensor(y_train, dtype=torch.float32))
         model.eval()
         with torch.no_grad():
-            y_train_pred = model(torch.tensor(X_train.to_numpy(), dtype=torch.float32)).numpy()
-            y_test_pred = model(torch.tensor(X_test.to_numpy(), dtype=torch.float32)).numpy()
+            y_train_pred = model(torch.tensor(X_train, dtype=torch.float32).to(DEVICE)).detach().cpu().numpy()
+            y_test_pred = model(torch.tensor(X_test, dtype=torch.float32).to(DEVICE)).detach().cpu().numpy()
     else:
         model.fit(X_train, y_train)
 
@@ -137,9 +147,17 @@ for train_index, test_index in kf.split(X):
 end = timer()
 
 # Train with the whole data set
+
+y_scaler = preprocessing.StandardScaler().fit(y)
+y = y_scaler.transform(y)
+    
+X_scaler = preprocessing.StandardScaler().fit(X)
+X = X_scaler.transform(X)
+    
 if class_name == MODEL_TORCH:
-    torch_train(model, 100, torch.tensor(X.to_numpy(), dtype=torch.float32), torch.tensor(y, dtype=torch.float32))
-    # ic(model)
+    model.to(DEVICE)
+    torch_train(model, 100, torch.tensor(X, dtype=torch.float32), torch.tensor(y, dtype=torch.float32))
+    model.to('cpu')
 else:
     model.fit(X, y)
 
@@ -149,6 +167,8 @@ k_fold_r2 = round(np.mean(r2_test_list),2)
 k_fold_r2_train = round(np.mean(r2_train_list),2)
 
 model_desc.model = model   # populate model_desc with trained model
+model_desc.X_scaler = X_scaler
+model_desc.y_scaler = y_scaler
 model_desc.k_fold_rmse = k_fold_rmse
 model_desc.k_fold_r2 = k_fold_r2
 

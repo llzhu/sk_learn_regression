@@ -2,7 +2,6 @@ import pandas as pd
 import streamlit as st
 import plotly.figure_factory as ff
 from rdkit import Chem
-from sklearn import preprocessing
 from sklearn.model_selection import ShuffleSplit
 from ml_util import *
 from ml_comp import *
@@ -124,23 +123,19 @@ X = get_all_descriptors(chem_list, radius=RADIUS, fp_size=FP_SIZE, descriptor_se
 X_cols = X.columns
 
 
-
-
 if algorithm == MODEL_TORCH:
     model = L3Model(len(X_cols), 256, 128)
 
 y = df_g[expt_col_name].values.reshape(-1, 1)
-y_scaler = preprocessing.StandardScaler().fit(y)
-y = y_scaler.transform(y)
+# y_scaler = preprocessing.StandardScaler().fit(y)
+# y = y_scaler.transform(y)
 
-X_scaler = preprocessing.StandardScaler().fit(X)
-X = X_scaler.transform(X)
-X = pd.DataFrame(data=X)
-
-# model.fit(X, y)
+# X_scaler = preprocessing.StandardScaler().fit(X)
+# X = X_scaler.transform(X)
+# X = pd.DataFrame(data=X)
 
 app_vars = AppVars(study, X.shape, orig_col_name, expt_col_name, apply_log)
-model_desc = ModelDesc(X_desc, X_cols, X_scaler, y_scaler, class_name, model)
+model_desc = ModelDesc(X_desc=X_desc, X_cols=X_cols, class_name=class_name, model=model)
 model_data = ModelData(X, y)
 
 
