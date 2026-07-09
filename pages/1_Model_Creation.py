@@ -35,7 +35,6 @@ if 'model_data' in st.session_state:
 
 
 class_name = model_desc.class_name
-model = model_desc.model
 
 st.write(f"Overall Prediction Accuracy of {class_name} on {app_vars.study} using {model_desc.X_desc} as features:")
 summery_empty = st.empty()
@@ -45,6 +44,7 @@ summary_container = st.container()
 
 k = 5
 kf = KFold(n_splits=k, shuffle=True, random_state=42)
+epochs = 100
 
 n_test = int(100/k)
 n_train = 100 - n_test
@@ -72,14 +72,27 @@ for train_index, test_index in kf.split(X):
     X_test = X_scaler.transform(X_test)
     
 
-    if class_name == MODEL_TORCH:
+    if class_name in [MODEL_L3, MODEL_L4]:
+        
+        model = model_factory(class_name, input_dim=len(model_desc.X_cols))
         model.to(DEVICE)
-        torch_train(model, 100, torch.tensor(X_train, dtype=torch.float32), torch.tensor(y_train, dtype=torch.float32))
+        torch_train_batch(model, 
+                          criterion = nn.MSELoss(), 
+                          optimizer=torch.optim.Adam(model.parameters(), lr=1e-3), 
+                          epochs=epochs, 
+                          dataset=TensorDataset(torch.tensor(X_train, dtype=torch.float32), torch.tensor(y_train, dtype=torch.float32)), 
+                          batch_size=32)
+        # torch_train(model, 100, torch.tensor(X_train, dtype=torch.float32), torch.tensor(y_train, dtype=torch.float32))
         model.eval()
         with torch.no_grad():
             y_train_pred = model(torch.tensor(X_train, dtype=torch.float32).to(DEVICE)).detach().cpu().numpy()
             y_test_pred = model(torch.tensor(X_test, dtype=torch.float32).to(DEVICE)).detach().cpu().numpy()
     else:
+        if class_name ==MODEL_NN:
+            model = model_factory(class_name, hidden_layer_sizes=(256, 128), max_iter=epochs)
+        else:
+            model = model_factory(class_name)
+
         model.fit(X_train, y_train)
 
         y_train_pred = model.predict(X_train)
@@ -154,11 +167,23 @@ y = y_scaler.transform(y)
 X_scaler = preprocessing.StandardScaler().fit(X)
 X = X_scaler.transform(X)
     
-if class_name == MODEL_TORCH:
+if class_name in [MODEL_L3, MODEL_L4]:
+    model = model_factory(class_name, input_dim=len(model_desc.X_cols))
     model.to(DEVICE)
-    torch_train(model, 100, torch.tensor(X, dtype=torch.float32), torch.tensor(y, dtype=torch.float32))
+    # torch_train(model, 100, torch.tensor(X, dtype=torch.float32), torch.tensor(y, dtype=torch.float32))
+    torch_train_batch(model, 
+                        criterion = nn.MSELoss(), 
+                        optimizer=torch.optim.Adam(model.parameters(), lr=1e-3), 
+                        epochs=epochs, 
+                        dataset=TensorDataset(torch.tensor(X, dtype=torch.float32), torch.tensor(y, dtype=torch.float32)), 
+                        batch_size=32)
     model.to('cpu')
 else:
+    if class_name ==MODEL_NN:
+        model = model_factory(class_name, hidden_layer_sizes=(256, 128), max_iter=epochs)
+    else:
+        model = model_factory(class_name)
+
     model.fit(X, y)
 
 k_fold_rmse = round(np.mean(rmse_test_list),2)

@@ -8,6 +8,7 @@ from rdkit.Chem import rdDepictor,Descriptors
 from rdkit.ML.Descriptors import MoleculeDescriptors
 from rdkit.Chem.Descriptors import rdFingerprintGenerator
 from sklearn.preprocessing import StandardScaler
+from torch.utils.data import TensorDataset, DataLoader 
 from io import StringIO, BytesIO
 import os
 import shutil
@@ -88,9 +89,10 @@ MODEL_NN = 'Neural_Network'
 MODEL_LBR = 'Linear_Bayesian_Ridge'
 MODEL_RF = 'Random_Forest'
 MODEL_HGB = 'Hist_Gradient_Boost'
-MODEL_TORCH = 'PyTorch'
+MODEL_L3 = 'L3Model'
+MODEL_L4 = 'L4Model'
 
-MODEL_OPTIONS = [ MODEL_TORCH, MODEL_HGB, MODEL_LBR, MODEL_NN, MODEL_RF]
+MODEL_OPTIONS = [ MODEL_L3, MODEL_L4, MODEL_HGB, MODEL_LBR, MODEL_NN, MODEL_RF]
 
 # discriptors
 FP_ONLY = 'Morgan_FP'
@@ -219,6 +221,36 @@ class L4Model(nn.Module):
     def forward(self, x):
         return self.net(x)
 
+from sklearn.ensemble import HistGradientBoostingRegressor
+from sklearn.linear_model import BayesianRidge
+from sklearn.neural_network import MLPRegressor
+from sklearn.ensemble import RandomForestRegressor
+
+
+def model_factory(model_class: str, **kwargs):
+    """
+    Returns an instantiated sklearn model based on a keyword.
+    Accepts arbitrary keyword arguments (**kwargs) to pass to the model.
+    """
+    # Map keywords to the actual, uninstantiated classes
+    models = {
+        MODEL_HGB: HistGradientBoostingRegressor,
+        MODEL_LBR: BayesianRidge,
+        MODEL_NN: MLPRegressor,
+        MODEL_RF: RandomForestRegressor,
+        MODEL_L3: L3Model,
+        MODEL_L4: L4Model
+    }
+    
+    if model_class not in models:
+        raise ValueError(f"Unknown model type '{model_class}'. Choose from {list(models.keys())}")
+        
+    # Instantiate and return the model with any provided hyperparameters
+    return models[model_class](**kwargs)
+
+
+
+
 def torch_train(model, epochs, X, y):
     X = X.to(DEVICE)
     y = y.to(DEVICE)
@@ -237,6 +269,34 @@ def torch_train(model, epochs, X, y):
         optimizer.step()
     
     
+# criterion = nn.MSELoss() for regression
+# criterion = nn.BCELoss() or nn.BCEWithLogitsLoss() for 0/1 classification
+# criteria - nn.CrossEntropyLoss() for multi-classifications
+
+def torch_train_batch(model, criterion, optimizer, epochs, dataset, batch_size):
+   
+    data_loader = DataLoader(dataset, batch_size, shuffle=True)
+    
+    # Training loop
+    for epoch in range(epochs):
+        model.train()
+        running_loss = 0.0
+        for X_batch, y_batch in data_loader:
+            X_batch = X_batch.to(DEVICE)
+            y_batch = y_batch.to(DEVICE)
+
+            optimizer.zero_grad()
+            preds = model(X_batch)
+
+            loss = criterion(preds, y_batch)
+
+            loss.backward()
+
+            optimizer.step()
+
+            running_loss += loss.item()
+        if epoch % 10 == 0:
+            print(f'Epoch {epoch+1}: {running_loss/len(dataset)}')
 
 # def get_chemdl_activity_df(standard_type, target_organism):
 #

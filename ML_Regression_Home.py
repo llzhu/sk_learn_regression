@@ -22,26 +22,26 @@ app_header()
 study, apply_log, X_desc, algorithm, excluded_list, exclusion_seed, excluded_pct, new_model = app_setup() 
 
 model = None
-class_name = ''
-if algorithm == MODEL_HGB:
-    from sklearn.ensemble import HistGradientBoostingRegressor
-    model = HistGradientBoostingRegressor()
-    class_name = 'HistGradientBoostingRegressor'
-elif algorithm == MODEL_LBR:
-    from sklearn.linear_model import BayesianRidge
-    model = BayesianRidge()
-    class_name = 'BayesianRidge'
-elif algorithm == MODEL_NN:
-    from sklearn.neural_network import MLPRegressor
-    model = MLPRegressor(hidden_layer_sizes=(1000), activation='relu', max_iter=1000, shuffle=True)
-    class_name = 'MLPRegressor'
-elif algorithm == MODEL_RF:
-    from sklearn.ensemble import RandomForestRegressor
-    model = RandomForestRegressor()
-    class_name = 'RandomForestRegressor'
-elif algorithm == MODEL_TORCH:
-    # it is a special case
-    class_name = MODEL_TORCH
+# class_name = ''
+# if algorithm == MODEL_HGB:
+#     from sklearn.ensemble import HistGradientBoostingRegressor
+#     model = HistGradientBoostingRegressor()
+#     class_name = 'HistGradientBoostingRegressor'
+# elif algorithm == MODEL_LBR:
+#     from sklearn.linear_model import BayesianRidge
+#     model = BayesianRidge()
+#     class_name = 'BayesianRidge'
+# elif algorithm == MODEL_NN:
+#     from sklearn.neural_network import MLPRegressor
+#     model = MLPRegressor(hidden_layer_sizes=(1000), activation='relu', max_iter=1000, shuffle=True)
+#     class_name = 'MLPRegressor'
+# elif algorithm == MODEL_RF:
+#     from sklearn.ensemble import RandomForestRegressor
+#     model = RandomForestRegressor()
+#     class_name = 'RandomForestRegressor'
+# elif algorithm == MODEL_TORCH:
+#     # it is a special case
+#     class_name = MODEL_TORCH
 
 st.session_state['new_model'] = new_model
 st.session_state['env'] = env
@@ -53,7 +53,7 @@ if study == '--':
 if not new_model:
     # These basic data are still need to properly load the existing models
     app_vars = AppVars(study=study, apply_log=apply_log)
-    model_desc = ModelDesc(X_desc=X_desc, class_name=class_name, model=model)
+    model_desc = ModelDesc(X_desc=X_desc, class_name=algorithm, model=model)
     st.session_state['app_vars'] = app_vars   
     st.session_state['model_desc'] = model_desc
 
@@ -123,8 +123,8 @@ X = get_all_descriptors(chem_list, radius=RADIUS, fp_size=FP_SIZE, descriptor_se
 X_cols = X.columns
 
 
-if algorithm == MODEL_TORCH:
-    model = L3Model(len(X_cols), 256, 128)
+# if algorithm == MODEL_TORCH:
+#     model = L3Model(len(X_cols), 256, 128)
 
 y = df_g[expt_col_name].values.reshape(-1, 1)
 # y_scaler = preprocessing.StandardScaler().fit(y)
@@ -135,7 +135,7 @@ y = df_g[expt_col_name].values.reshape(-1, 1)
 # X = pd.DataFrame(data=X)
 
 app_vars = AppVars(study, X.shape, orig_col_name, expt_col_name, apply_log)
-model_desc = ModelDesc(X_desc=X_desc, X_cols=X_cols, class_name=class_name, model=model)
+model_desc = ModelDesc(X_desc=X_desc, X_cols=X_cols, class_name=algorithm)
 model_data = ModelData(X, y)
 
 

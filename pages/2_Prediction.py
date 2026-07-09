@@ -82,7 +82,7 @@ with col1:
         X = X[model_desc.X_cols]
         X = model_desc.X_scaler.transform(X)
 
-        if model_desc.class_name == MODEL_TORCH:
+        if model_desc.class_name in [MODEL_L3, MODEL_L4]:
             model = model_desc.model
             model.eval()
             with torch.no_grad():
