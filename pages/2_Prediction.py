@@ -16,8 +16,6 @@ if 'app_vars' in st.session_state:
 if 'model_desc' in st.session_state:
     model_desc:ModelDesc = st.session_state['model_desc']
     
-with st.sidebar:
-    mol_container = st.container()
 
 prefix = get_prefix(env, app_vars, model_desc)
 any_contents = any_contents(env.s3_bucket, prefix)
@@ -73,6 +71,8 @@ with col1:
 
                 exp_val_list = df_input[exp_col].tolist() 
 
+    
+    mol_container = st.container()
 
     df_pred = None
     if smiles_list:

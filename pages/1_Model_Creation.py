@@ -76,9 +76,11 @@ for train_index, test_index in kf.split(X):
         
         model = model_factory(class_name, input_dim=len(model_desc.X_cols))
         model.to(DEVICE)
+        criterion = nn.MSELoss()
+        optimizer=torch.optim.Adam(model.parameters(), lr=1e-3)
         torch_train_batch(model, 
-                          criterion = nn.MSELoss(), 
-                          optimizer=torch.optim.Adam(model.parameters(), lr=1e-3), 
+                          criterion = criterion, 
+                          optimizer=optimizer, 
                           epochs=epochs, 
                           dataset=TensorDataset(torch.tensor(X_train, dtype=torch.float32), torch.tensor(y_train, dtype=torch.float32)), 
                           batch_size=32)
@@ -87,6 +89,9 @@ for train_index, test_index in kf.split(X):
         with torch.no_grad():
             y_train_pred = model(torch.tensor(X_train, dtype=torch.float32).to(DEVICE)).detach().cpu().numpy()
             y_test_pred = model(torch.tensor(X_test, dtype=torch.float32).to(DEVICE)).detach().cpu().numpy()
+
+        del model, optimizer
+        torch.cuda.empty_cache()
     else:
         if class_name ==MODEL_NN:
             model = model_factory(class_name, hidden_layer_sizes=(256, 128), max_iter=epochs)
