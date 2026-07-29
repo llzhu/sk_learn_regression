@@ -1,0 +1,15 @@
+name: skl-pytorch-regression
+
+services:
+  streamlit:
+    build: .
+    ports:
+      - "8502:8501"
+    secrets:
+      - source: streamlit_secrets
+        target: /app/.streamlit/secrets.toml
+
+secrets:
+  streamlit_secrets:
+    file: ./.streamlit/secrets.toml
+   
