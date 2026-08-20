@@ -12,5 +12,6 @@ activities = activity.filter(target_chembl_id="CHEMBL204").filter(standard_type=
             .only(['molecule_chembl_id', 'canonical_smiles', 'standard_value', 'standard_units'])
 
 ### Deployment
-It is deployed on Streamlit community cloud:
-https://pytorch-sk-learn-regression-llzhu.streamlit.app/
+It is deployed on 
+- Streamlit community cloud: https://pytorch-sk-learn-regression-llzhu.streamlit.app/
+- AWS: http://52.73.41.141:8502/
